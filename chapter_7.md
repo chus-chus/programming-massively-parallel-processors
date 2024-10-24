@@ -96,40 +96,41 @@ Identical to the previous one, but F not as a parameter.
 
 ```c
 #define IN_TILE_DIM 32
-#define OUT_TILE_DIM ((IN TILE DIM) - 2*(FILTER RADIUS))
+#define OUT_TILE_DIM ((IN_TILE_DIM) - 2*(FILTER_RADIUS))
 __constant__ float F_c[2*FILTER_RADIUS+1][2*FILTER_RADIUS+1];
-__global__ void convolution_tiled_3D_const_mem_kernel (float *N, float *P, int width, int height, int depth) {
+__global__ void convolution_tiled_3D_const_mem_kernel (float *N, float *P, int width, 
+                                                       int height, int depth) {
     int col = blockIdx.x*OUT_TILE_DIM + threadIdx.x - FILTER_RADIUS;
     int row = blockIdx.y*OUT_TILE_DIM + threadIdx.y - FILTER_RADIUS;
-    int out_depth = blockIdx.z*OUT_TILE_DIM + threadIdx.z - FILTER_RADIUS;
-    //loading input tile
-    __shared__ float N_s[IN_TILE DIM][IN_ TILE_DIM]:
+    int outDepth = blockIdx.z*OUT_TILE_DIM + threadIdx.z - FILTER_RADIUS;
+    // load input tile
+    __shared__ float N_s[IN_TILE DIM][IN_TILE_DIM][IN_TILE_DIM]:
     if (row>=0 && row<height && col>=0 && col<width) {
-        N_s[threadIdx.y][threadIdx.x][threadIdx.z] = 
-                N[out_depth*width*height + row*width + col];
+        N_s[threadIdx.z][threadIdx.y][threadIdx.x] = 
+                N[outDepth*width*height + row*width + col];
     } else {
-        N_s[threadIdx.y][threadIdx.x][threadIdx.z] = 0.0f;
+        N_s[threadIdx.z][threadIdx.y][threadIdx.x] = 0.0f;
     }
     __syncthreads();
-    // Calculating output elements
+    // compute output elements
     int tileCol = threadIdx.x - FILTER_RADIUS;
     int tileRow = threadIdx.y - FILTER_RADIUS;
     int tileDepth = threadIdx.z - FILTER_RADIUS;
     // turning off the threads at the edges of the block
     if (col >= 0 && col < width && row >=0 && row < height && 
-        out_depth >= 0 && out_depth < depth) {
-        if (tileCol >= 0 && tileCol < OUT_TILE_DIM && tileRow>=0
-        && tileRow<OUT_IILE_DIM && tileDepth >= 0 && tileDepth < OUT_TILE_DIM) {
+        outDepth >= 0 && outDepth < depth) {
+        if (tileCol >= 0 && tileCol < OUT_TILE_DIM && tileRow >= 0
+        && tileRow < OUT_IILE_DIM && tileDepth >= 0 && tileDepth < OUT_TILE_DIM) {
             float Pvalue = 0.0f;
             for (int fRow = 0; fRow < 2*FILTER_RADIUS+1; fRow++) {
-                for (int fCol = 0; fCol < 2*FILTER_RADIUS+1; {Col++) {
+                for (int fCol = 0; fCol < 2*FILTER_RADIUS+1; fCol++) {
                     for (int fDepth = 0; fDepth < 2*FILTER_RADIUS+1; fDepth++) {
                         Pvalue += F_c[fRow][fCol][fDepth] * 
                                   N_s[tileDepth+fDepth][tileRow+fRow][tileCol+fCol];
                     }
                 }
             }
-            P[outDepth*width*height + outRow*width + outCol] = Pvalue;
+            P[outDepth*width*height + row*width + col] = Pvalue;
         }
     }
 }
