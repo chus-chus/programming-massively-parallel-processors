@@ -5,5 +5,6 @@
 [Chapter 4: Compute architecture and scheduling](chapter_4.md)  
 [Chapter 5: Memory architecture and data locality](chapter_5.md)  
 [Chapter 6: Performance considerations](chapter_6.md)
+[Chapter 7: Convolution](chapter_7.md)
 
 Solutions are my own, and can't guarantee they are correct! Ping me on twitter to discuss or feel free to open an issue or PR.
