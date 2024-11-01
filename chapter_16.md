@@ -76,13 +76,13 @@ __global__ void ConvBackpropWGrad_Kernel (int M, int C, int H, int W, int K, flo
     int p = threadIdx.y;
     int q = threadIdx.x;
 
-    int H_out = H - K - 1;
-    int W_out = W - K - 1;
+    int H_out = H - K + 1;
+    int W_out = W - K + 1;
 
     grad = 0.f;
     for (int h = 0; h < H_out, ++h) {
         for (int w = 0; w < W_out, ++w) {
-            grad += dE_dy[n, m, c, h, w] * X[n, c, h + p, w + q];
+            grad += dE_dy[n, m, h, w] * X[n, c, h + p, w + q];
         }
     }
     dE_dw[n, m, c, p, q] = grad;
